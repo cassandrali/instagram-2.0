@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- Required meta tags --> 
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!-- Bootstrap CSS --> 
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+	<title>Instagram 2.0</title>
+</head>
+<body>
+	<div class="container">
+	  <div class="page-header">
+	    <h1>Instagram 2.0</h1>      
+	  </div>  
+
+	  <!-- FORM IMAGE URL -->
+<!-- 	  <form method="POST" action="/add">
+	  	<div class="form-group">
+	  		<label>Caption</label>
+		  	<input id="caption" name="caption" type="text" />
+		  	<label>Image URL</label>
+		  	<input id="url" name="url" type="text" />
+		  </div>
+		  <button type="submit">Post</button>
+	  </form> -->
+
+	  <!-- FORM UPLOAD --> 
+	  <form method="POST" action= "{{ url_for('upload') }}" enctype="multipart/form-data">
+	  	<div class="form-group">
+	  		<label for="inputFile">File input</label>
+		  	<input type="file" name="inputFile" >
+		  	<label>Caption</label>
+		  	<input id="caption" name="caption" type="text" />
+		  	<button type="submit">Upload</button>
+		  </div>
+	  </form>
+
+
+	</div>
+
+	<!-- POSTS --> 
+	{% for post in posts %}
+		<div class="container"> 
+			<img src=" {{ url_for('static', filename=post.imagepath) }}" width=40%>
+			<div>caption: {{ post.caption }}</div>
+			<div>tags: {{ post.tags }}</div>
+			<form method="POST" action="{{ url_for('delete', id=post.id) }}">
+				<button type="submit">Delete</button>
+			</form>
+		</div>
+	{% endfor %}
+
+</body>
+</html>
