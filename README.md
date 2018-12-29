@@ -4,7 +4,7 @@ Instagram 2.0 is a Flask app that allows you to upload images with captions, ult
 
 ## Getting Started
 
-To run the application, cd to the project directory and run the following commands from the command line. 
+To run the application, cd to the project directory and run the following commands:
 
 ```
 pip install -r requirements.txt
