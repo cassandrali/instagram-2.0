@@ -1,41 +1,39 @@
 from instagram2 import app, db
-from models import Post
+from models import Post, Tag
 from flask import render_template, request, redirect, url_for, jsonify, json, flash
 from werkzeug import secure_filename
 import os
 from objectdetection import *
 from collections import OrderedDict
 
-'''route decorators, root page'''
 @app.route("/")
+@app.route("/home")
 def index():
 	posts = Post.query.all()
 
 	return render_template('layout.html', posts=posts)
-
-# allow pictuers only
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/upload', methods=['POST'])
 def upload():
 	# check if the post request has the file part
 	if 'inputFile' not in request.files:
 		flash('No file part')
-		return redirect(request.url)
+		return redirect(url_for('index'))
 	file = request.files['inputFile']
-	# if user doesa not select file, browser also
+	# if user does not select file, browser also
 	# submit a empty part without filename
 	if file.filename == '':
 		flash('No selected file')
-		return redirect(request.url)
+		return redirect(url_for('index'))
 	if file and allowed_file(file.filename):
-		''' secure_filename: never trust user input '''
+		path = 'images/' + file.filename
 
-		# saves image to statc/images folder
+		# if image already exists - avoid duplicate uploads 
+		if Post.query.filter_by(imagepath=path).first() != None:
+			flash('Image is already in feed')
+			return redirect(url_for('index'))
+
+		# saves image to static/images folder
 		file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))) # save to static/images
 
 		add_to_database(file)
@@ -45,19 +43,31 @@ def upload():
 # endpoint to delete an image 
 @app.route('/delete/<int:id>', methods=['POST'])
 def delete(id):
-	post = Post.query.get(id)
+	post = Post.query.get(id) #TODO: DELETE CORRESPONDING TAGS 
 	db.session.delete(post)
 	db.session.commit()
 	return redirect(url_for('index'))
 
+@app.route("/<tag_name>")
+def display_posts_with_specified_tag(tag_name):
+	posts = Tag.query.filter_by(name=tag_name).first().owners
+	return render_template('layout.html', posts=posts, tag_name_header=tag_name)
+
+# allow images only
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 def add_to_database(file):
-	# add FILEPATH, CAPTION, and TAGS to database
+	# add post to database
 	imagepath = 'images/' + file.filename
-
-	# caption
 	caption = request.form['caption']
+	post = Post(imagepath=imagepath, caption=caption)
+	db.session.add(post)
 
-	# tags
+	# get tags using object detection model
 	absolute_image_path = '/Users/admin/Documents/instagramML/instagram2/static/images/' + file.filename
 	image = Image.open(absolute_image_path)
 	image_np = load_image_into_numpy_array(image)
@@ -66,17 +76,21 @@ def add_to_database(file):
 	tags = []
 	for j in range(len(output_dict['detection_classes'])):
 		if (output_dict['detection_scores'][j] > 0.5):
-			tags.append("#" + category_index.get(output_dict['detection_classes'][j]).get('name'))
+			tags.append(category_index.get(output_dict['detection_classes'][j]).get('name'))
 
 	unique_tags = list(OrderedDict.fromkeys(tags).keys())
 
-	tags = ''
+	# add tags to database
 	for tag in unique_tags:
-		tags += tag + " "
+		tag_object = Tag.query.filter_by(name=tag).first()
+		
+		if tag_object == None:
+			print('TAG: ' + tag) 
+			tag_object = Tag(name=tag)
+			db.session.add(tag_object)
 
-	# add to database
-	post = Post(imagepath=imagepath, caption=caption, tags=tags)
-	db.session.add(post)
+		tag_object.owners.append(post) # associate each tag with a post 
+
 	db.session.commit()
 
 # returns JSON of all image posts

@@ -8,45 +8,42 @@
 	<!-- Bootstrap CSS --> 
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
+	<!-- Custom CSS -->
+	<link rel="stylesheet" type="text/css" href="/static/css/main.css">
+
 	<title>Instagram 2.0</title>
 </head>
 <body>
 	<div class="container">
-	  <div class="page-header">
-	    <h1>Instagram 2.0</h1>      
-	  </div>  
+		<div class="page-header">
+			<h1><a class="page-header-link" href="{{ url_for('index') }}">Instagram 2.0</a></h1>
+			<h2>{% if tag_name_header is defined %}displaying all posts with #{{ tag_name_header }}{% endif %}</h2>
+		</div> 
 
-	  <!-- FORM IMAGE URL -->
-<!-- 	  <form method="POST" action="/add">
-	  	<div class="form-group">
-	  		<label>Caption</label>
-		  	<input id="caption" name="caption" type="text" />
-		  	<label>Image URL</label>
-		  	<input id="url" name="url" type="text" />
-		  </div>
-		  <button type="submit">Post</button>
-	  </form> -->
-
-	  <!-- FORM UPLOAD --> 
+	  <!-- HANDLES FORM UPLOAD --> 
 	  <form method="POST" action= "{{ url_for('upload') }}" enctype="multipart/form-data">
 	  	<div class="form-group">
 	  		<label for="inputFile">File input</label>
-		  	<input type="file" name="inputFile" >
-		  	<label>Caption</label>
+		  	<input type="file" name="inputFile" />
+		  	<label for="caption">Caption</label>
 		  	<input id="caption" name="caption" type="text" />
 		  	<button type="submit">Upload</button>
-		  </div>
+		 </div>
 	  </form>
-
 
 	</div>
 
 	<!-- POSTS --> 
 	{% for post in posts %}
-		<div class="container"> 
+		<div class="container">
 			<img src=" {{ url_for('static', filename=post.imagepath) }}" width=40%>
 			<div>caption: {{ post.caption }}</div>
-			<div>tags: {{ post.tags }}</div>
+			<div>
+				tags: 
+				{% for tag in post.tags %}
+					<a href="{{ url_for('display_posts_with_specified_tag', tag_name=tag.name) }}">#{{ tag.name }}</a>
+				{% endfor %}
+			</div>
 			<form method="POST" action="{{ url_for('delete', id=post.id) }}">
 				<button type="submit">Delete</button>
 			</form>
