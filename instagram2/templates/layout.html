@@ -5,50 +5,106 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+
 	<!-- Bootstrap CSS --> 
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+	<!-- Boostrap JS -->
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
 
 	<!-- Custom CSS -->
 	<link rel="stylesheet" type="text/css" href="/static/css/main.css">
 
 	<title>Instagram 2.0</title>
+	<a href="{{ url_for('index') }}"></a>
 </head>
 <body>
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			{% for message in messages %}
+				<div class="alert alert-primary" role="alert">
+					<h2>Error: {{ message }}</h2>
+				</div>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
 	<div class="container">
 		<div class="page-header">
-			<h1><a class="page-header-link" href="{{ url_for('index') }}">Instagram 2.0</a></h1>
+			<div class="title">
+				<h1><a class="title-link" href="{{ url_for('index') }}">Instagram 2.0</a></h1>
+			</div>
+			<div class="login">
+				<a href="{{ url_for('index') }}">log in </a>|
+				<a href="{{ url_for('index') }}">register</a>
+			</div>
 			<h2>{% if tag_name_header is defined %}displaying all posts with #{{ tag_name_header }}{% endif %}</h2>
 		</div> 
 
 	  <!-- HANDLES FORM UPLOAD --> 
 	  <form method="POST" action= "{{ url_for('upload') }}" enctype="multipart/form-data">
 	  	<div class="form-group">
-	  		<label for="inputFile">File input</label>
-		  	<input type="file" name="inputFile" />
-		  	<label for="caption">Caption</label>
-		  	<input id="caption" name="caption" type="text" />
-		  	<button type="submit">Upload</button>
-		 </div>
+		  	<input type="file" name="inputFile">
+		  	<input id="caption" name="caption" type="text" placeholder="caption">
+		  	<button type="submit" class="btn btn-primary btn-sm">Upload</button>
+		  </div>
 	  </form>
-
-	</div>
 
 	<!-- POSTS --> 
 	{% for post in posts %}
 		<div class="container">
 			<img src=" {{ url_for('static', filename=post.imagepath) }}" width=40%>
-			<div>caption: {{ post.caption }}</div>
+			<div class="caption"><h5>caption: {{ post.caption }}</h5></div>
 			<div>
+				<!-- TAGS -->
 				tags: 
 				{% for tag in post.tags %}
 					<a href="{{ url_for('display_posts_with_specified_tag', tag_name=tag.name) }}">#{{ tag.name }}</a>
 				{% endfor %}
 			</div>
+			<!-- DELETE BUTTON -->
 			<form method="POST" action="{{ url_for('delete', id=post.id) }}">
-				<button type="submit">Delete</button>
+				<button type="submit button" class="btn btn-danger btn-sm">Delete</button>
 			</form>
+			<!-- EDIT BUTTON -->
+			<button type="button" class="btn btn-primary btn-sm edit-button" data-toggle="modal" href="#myModal">Edit</button>
+
+			<!-- Modal -->
+			<div id="myModal" class="modal">
+			  <div class="modal-dialog">
+
+			    <!-- Modal content-->
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal">&times;</button>
+			        <h4 class="modal-title">Edit</h4>
+			      </div>
+
+			      <!-- modal body -->
+			      <form method="POST" action= "{{ url_for('edit', id=post.id) }}" enctype="multipart/form-data">
+				      <div class="form-group">
+			  				<label for="caption">Caption</label>
+			  				<input id="caption" name="caption" type="text" value="{{ post.caption }}" />
+			  				<label for="tags">Tags</label>
+			  				<input id="tags" name="tags" type="text" value="#{{ post.tags | join('#', attribute='name') }}"/>
+			  				<button type="submit">Update</button>
+			 				</div>
+		 				</form>
+
+			      <div class="modal-footer">
+			        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			      </div>
+			    </div>
+
+			  </div>
+			</div>
+
 		</div>
 	{% endfor %}
+	</div>
+	<script>
+	</script>
 
 </body>
 </html>

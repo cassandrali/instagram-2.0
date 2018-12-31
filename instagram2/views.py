@@ -1,4 +1,5 @@
 from instagram2 import app, db
+from forms import LoginForm, RegisterForm
 from models import Post, Tag
 from flask import render_template, request, redirect, url_for, jsonify, json, flash
 from werkzeug import secure_filename
@@ -17,7 +18,7 @@ def index():
 def upload():
 	# check if the post request has the file part
 	if 'inputFile' not in request.files:
-		flash('No file part')
+		flash('No file input')
 		return redirect(url_for('index'))
 	file = request.files['inputFile']
 	# if user does not select file, browser also
@@ -43,15 +44,72 @@ def upload():
 # endpoint to delete an image 
 @app.route('/delete/<int:id>', methods=['POST'])
 def delete(id):
-	post = Post.query.get(id) #TODO: DELETE CORRESPONDING TAGS 
-	db.session.delete(post)
+	post = Post.query.get(id) #TODO: DELETE CORRESPONDING TAGS
+
+	delete_tags(post)
+
+	db.session.delete(post) # deletes the post
 	db.session.commit()
+	return redirect(url_for('index'))
+
+# endpoint to edit an image's caption and tags
+@app.route('/edit/<int:id>', methods=['POST'])
+def edit(id):
+	# query for post to be edited 
+	post = Post.query.get(id)
+
+	delete_tags(post)
+
+	# get new caption and tags 
+	new_caption = request.form['caption']
+	print('NEW CAPTION: ' + new_caption)
+	new_tags = request.form['tags'] # assume that it's a string in the format #dog#cat#whatever
+	print('NEW TAGS: ' + new_tags)
+	new_tags = "".join(new_tags.split()) # remove all whitespace, string type
+	print('NEW TAGS WITH WHITESPACE REMOVED: ' + new_tags)
+	new_tag_list = new_tags.split('#')
+
+	for new_tag in new_tag_list:
+		print('TAG IN NEW TAG LIST: ' + new_tag)
+		if new_tag:
+			print (new_tag + ' IS NOT EMPTY')
+			new_tag_object = Tag.query.filter_by(name=new_tag).first()
+			if new_tag_object == None:
+				new_tag_object = Tag(name=new_tag)
+				db.session.add(new_tag_object)
+				print("DB DOES NOT CONTAIN " + new_tag + ". ADD IT TO DB")
+
+			new_tag_object.owners.append(post) # associate each NEW tag with the post 
+
+	# update post's caption in database 
+	post.caption = new_caption
+
+	db.session.commit()
+
 	return redirect(url_for('index'))
 
 @app.route("/<tag_name>")
 def display_posts_with_specified_tag(tag_name):
 	posts = Tag.query.filter_by(name=tag_name).first().owners
 	return render_template('layout.html', posts=posts, tag_name_header=tag_name)
+
+@app.route("/login")
+def login():
+	form = LoginForm()
+
+	if form.validate_on_submit():
+		return render_template('login.html', form=form) # PLACEHOLDER
+
+	return render_template('login.html', form=form)
+
+@app.route("/register")
+def register():
+	form = RegisterForm()
+
+	if form.validate_on_submit():
+		return render_template('login.html', form=form) #PLACEHOLDER
+
+	return render_template('register.html', form=form)
 
 # allow images only
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -93,7 +151,11 @@ def add_to_database(file):
 
 	db.session.commit()
 
-# returns JSON of all image posts
-# @app.route('/api/posts')
-# def retrieve_images():
-# 	return json.dumps([p.as_dict() for p in Post.query.all()][::-1])
+# delete these 
+def delete_tags(post):
+	tags_to_be_deleted = post.tags.copy() #challenge 
+	for i in range(len(tags_to_be_deleted)):
+		tag_to_be_deleted = tags_to_be_deleted[i]
+		tag_to_be_deleted.owners.remove(post) # remove association between Tag and Post
+		if tag_to_be_deleted.owners.first() == None: # deletes Tag objects which have no posts
+			db.session.delete(tag_to_be_deleted)

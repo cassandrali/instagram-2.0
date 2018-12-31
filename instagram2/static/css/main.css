@@ -1,4 +1,30 @@
-.page-header-link {
+/*.title > h1 > a {
 	text-decoration: none;
 	color: #000000;
+}*/
+
+.title_link {
+	text-decoration: none;
+	color: #000000;
+}
+
+/*a[href~=home] {
+	text-decoration: none;
+	color: #000000;
+}*/
+
+.title {
+	display: inline-block;
+}
+
+.login {
+	display: inline-block;
+}
+
+.btn-danger {
+	display: inline-block;
+}
+
+.edit-button {
+	display: inline-block;
 }
