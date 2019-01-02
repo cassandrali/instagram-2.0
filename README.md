@@ -1,6 +1,6 @@
 # instagram-2.0
 
-Instagram 2.0 is a Flask app that allows you to upload images with captions, ultmately creating an image feed. Hashtags are automatically generated for each image using TensorFlow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection). 
+Instagram 2.0 is a Flask app that allows users to register and upload images with captions, ultmately creating an image feed. Hashtags are automatically generated for each image using TensorFlow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection). 
 
 ## Getting Started
 
