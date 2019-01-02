@@ -18,8 +18,6 @@
            {{ form.email(type="email", class="form-control", placeholder="Enter email") }}
       {% endif %}
 
-  <!--     <label for="email">Email address</label>
-      <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Enter email"> -->
     </div>
     <div class="form-group">
       {{ form.username.label(for="username") }}
@@ -35,8 +33,6 @@
            {{ form.username(type="username", class="form-control", placeholder="Enter username") }}
       {% endif %}
 
-  <!--     <label for="username">Username</label>
-      <input type="email" class="form-control" id="username" aria-describedby="emailHelp" placeholder="Password"> -->
     </div>
     <div class="form-group">
       {{ form.password.label(for="password") }}
@@ -52,11 +48,8 @@
            {{ form.password(type="password", class="form-control", placeholder="Password") }}
       {% endif %}
 
-  <!--     <label for="password">Password</label>
-      <input type="password" class="form-control" id="password" placeholder="Password"> -->
     </div>
     {{ form.submit(class="btn btn-primary") }}
-  <!--   <button type="submit" class="btn btn-primary">Register</button> -->
   </form>
   <small class="text-muted">
     Already have an account?<a class="ml-2" href="{{ url_for('login') }}">Sign in</a>

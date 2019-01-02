@@ -63,22 +63,16 @@ def edit(id):
 
 	# get new caption and tags 
 	new_caption = request.form['caption']
-	print('NEW CAPTION: ' + new_caption)
 	new_tags = request.form['tags'] # assume that it's a string in the format #dog#cat#whatever
-	print('NEW TAGS: ' + new_tags)
 	new_tags = "".join(new_tags.split()) # remove all whitespace, string type
-	print('NEW TAGS WITH WHITESPACE REMOVED: ' + new_tags)
 	new_tag_list = new_tags.split('#')
 
 	for new_tag in new_tag_list:
-		print('TAG IN NEW TAG LIST: ' + new_tag)
 		if new_tag:
-			print (new_tag + ' IS NOT EMPTY')
 			new_tag_object = Tag.query.filter_by(name=new_tag).first()
 			if new_tag_object == None:
 				new_tag_object = Tag(name=new_tag)
 				db.session.add(new_tag_object)
-				print("DB DOES NOT CONTAIN " + new_tag + ". ADD IT TO DB")
 
 			new_tag_object.owners.append(post) # associate each NEW tag with the post 
 
@@ -116,15 +110,12 @@ def register():
 	if current_user.is_authenticated:
 		return redirect(url_for('index'))
 	if form.validate_on_submit():
-		print('FORM VALIDATED')
 		hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
 		user = User(username=form.username.data, email=form.email.data, password=hashed_password)
 		db.session.add(user)
 		db.session.commit()
-		flash('Account created for {form.username.data}!')
+		flash('Account created for ' + form.username.data + '!')
 		return redirect(url_for('login'))
-	print('FORM NOT VALIDATED??')
-	print(form.errors)
 
 	return render_template('register.html', form=form)
 
@@ -146,7 +137,8 @@ def add_post_to_database(file):
 	caption = request.form['caption']
 	user_id = current_user.id
 	post = Post(imagepath=imagepath, caption=caption, user_id=user_id)
-	post.author.append(current_user)
+	current_user.posts.append(post)
+	#post.author.append(current_user)
 	db.session.add(post)
 
 	# get tags using object detection model

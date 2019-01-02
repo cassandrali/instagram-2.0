@@ -11,13 +11,6 @@ from collections import defaultdict
 from io import StringIO
 from PIL import Image
 
-# This is needed since the notebook is stored in the object_detection folder.
-# sys.path.append("..")
-# sys.path.append("/Users/admin/Documents/instagramML/instagram2/object_detection")
-# sys.path.append("/Users/admin/Documents/instagramML/instagram2")
-
-# print(sys.path)
-
 from utils import ops as utils_ops
 
 if StrictVersion(tf.__version__) < StrictVersion('1.9.0'):

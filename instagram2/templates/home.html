@@ -14,14 +14,16 @@
 
 {% block content %}
 
-  <!-- HANDLES FORM UPLOAD --> 
-  <form method="POST" action= "{{ url_for('upload') }}" enctype="multipart/form-data">
-  	<div class="form-group">
-	  	<input type="file" name="inputFile">
-	  	<input id="caption" name="caption" type="text" placeholder="caption">
-	  	<button type="submit" class="btn btn-primary btn-sm">Upload</button>
-	  </div>
-  </form>
+  <!-- HANDLES FORM UPLOAD -->
+  {% if current_user.is_authenticated %} 
+	  <form method="POST" action= "{{ url_for('upload') }}" enctype="multipart/form-data">
+	  	<div class="form-group">
+		  	<input type="file" name="inputFile">
+		  	<input id="caption" name="caption" type="text" placeholder="caption">
+		  	<button type="submit" class="btn btn-primary btn-sm">Upload</button>
+		  </div>
+	  </form>
+  {% endif %}
 
 <!-- POSTS --> 
 {% for post in posts %}
