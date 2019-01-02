@@ -1,4 +1,9 @@
-from instagram2 import db
+from instagram2 import db, login_manager
+from flask_login import UserMixin
+
+@login_manager.user_loader
+def load_user(user_id):
+	return User.query.get(int(user_id))
 
 # MANY TO MANY RELATIONSHIP
 
@@ -15,15 +20,26 @@ class Post(db.Model):
 	imagepath = db.Column('imagepath', db.Text, nullable=False) # images/ + filename
 	caption = db.Column('caption', db.Text, nullable=False)
 	tags = db.relationship('Tag', secondary=assoc, backref=db.backref('owners', lazy='dynamic')) # owner of tag - pseudo column
-
-	def __repr__(self):
-		return f"Post('{self.caption}')"
+	user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # id of user who posts the post 
 
 # each tag can have MANY posts
 class Tag(db.Model):
 	__table__name = 'tag'
 	id = db.Column('id', db.Integer, primary_key=True)
 	name = db.Column('name', db.Text)
+
+# one user can have MANY posts
+class User(db.Model, UserMixin):
+	id = db.Column(db.Integer, primary_key=True)
+	username = db.Column(db.String(), unique=True, nullable=False)
+	email = db.Column(db.String(), unique=True, nullable=False)
+	password = db.Column(db.String(), nullable=False)
+	posts = db.relationship('Post', backref='author', lazy=True)
+	# sql alchemy will load the data as necessary in one go
+
+	def __repr__(self):
+		return f"User('{self.username}', '{self.email}')"
+
 
 # NOTE TO SELF 
 # add all posts to table 

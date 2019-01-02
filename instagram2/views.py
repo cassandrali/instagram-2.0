@@ -1,18 +1,19 @@
-from instagram2 import app, db
+from instagram2 import app, db, bcrypt
 from forms import LoginForm, RegisterForm
-from models import Post, Tag
+from models import Post, Tag, User
 from flask import render_template, request, redirect, url_for, jsonify, json, flash
 from werkzeug import secure_filename
 import os
 from objectdetection import *
 from collections import OrderedDict
+from flask_login import login_user, current_user, logout_user
 
 @app.route("/")
 @app.route("/home")
 def index():
 	posts = Post.query.all()
 
-	return render_template('layout.html', posts=posts)
+	return render_template('home.html', posts=posts)
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -37,7 +38,7 @@ def upload():
 		# saves image to static/images folder
 		file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))) # save to static/images
 
-		add_to_database(file)
+		add_post_to_database(file)
 
 		return redirect(url_for('index'))
 
@@ -91,25 +92,46 @@ def edit(id):
 @app.route("/<tag_name>")
 def display_posts_with_specified_tag(tag_name):
 	posts = Tag.query.filter_by(name=tag_name).first().owners
-	return render_template('layout.html', posts=posts, tag_name_header=tag_name)
+	return render_template('home.html', posts=posts, tag_name_header=tag_name)
 
-@app.route("/login")
+@app.route("/login", methods=['GET', 'POST'])
 def login():
 	form = LoginForm()
-
+	if current_user.is_authenticated:
+		return redirect(url_for('index'))
 	if form.validate_on_submit():
-		return render_template('login.html', form=form) # PLACEHOLDER
-
+		user = User.query.filter_by(username=form.username.data).first()
+		if user and bcrypt.check_password_hash(user.password, form.password.data):
+			login_user(user)
+			flash('You have been logged in!')
+			return redirect(url_for('index'))
+		else:
+			flash("Login unsuccessful")
+			
 	return render_template('login.html', form=form)
 
-@app.route("/register")
+@app.route("/register", methods=['GET', 'POST'])
 def register():
 	form = RegisterForm()
-
+	if current_user.is_authenticated:
+		return redirect(url_for('index'))
 	if form.validate_on_submit():
-		return render_template('login.html', form=form) #PLACEHOLDER
+		print('FORM VALIDATED')
+		hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+		user = User(username=form.username.data, email=form.email.data, password=hashed_password)
+		db.session.add(user)
+		db.session.commit()
+		flash('Account created for {form.username.data}!')
+		return redirect(url_for('login'))
+	print('FORM NOT VALIDATED??')
+	print(form.errors)
 
 	return render_template('register.html', form=form)
+
+@app.route("/logout")
+def logout():
+	logout_user()
+	return redirect(url_for('index'))
 
 # allow images only
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -118,11 +140,13 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def add_to_database(file):
+def add_post_to_database(file):
 	# add post to database
 	imagepath = 'images/' + file.filename
 	caption = request.form['caption']
-	post = Post(imagepath=imagepath, caption=caption)
+	user_id = current_user.id
+	post = Post(imagepath=imagepath, caption=caption, user_id=user_id)
+	post.author.append(current_user)
 	db.session.add(post)
 
 	# get tags using object detection model
